@@ -1,0 +1,28 @@
+[project]
+name = "zakupki-crawler"
+version = "0.1.0"
+description = "Playwright-only crawler for zakupki.gov.ru notices"
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4>=4.13,<5",
+    "playwright>=1.53,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4,<9",
+]
+
+[project.scripts]
+zakupki-crawl = "zakupki_crawler.cli:main"
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "live: hits zakupki.gov.ru with a real browser session",
+]
+testpaths = ["tests"]
