@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -9,6 +9,7 @@ from zakupki_crawler.parsers import (
     parse_lots_223,
     parse_search_results,
 )
+from zakupki_crawler.utils import classify_notice_url
 
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -16,6 +17,21 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 def load_fixture(name: str) -> str:
     return (FIXTURES / name).read_text(encoding="utf-8")
+
+
+def test_classify_notice_url_current_families() -> None:
+    assert classify_notice_url(
+        "https://zakupki.gov.ru/epz/order/notice/notice223/common-info.html?noticeInfoId=19543004"
+    ) == ("223-FZ", "notice223")
+    assert classify_notice_url(
+        "https://zakupki.gov.ru/epz/order/notice/ea20/view/common-info.html?regNumber=0242100000126000036"
+    ) == ("44-FZ", "ea20")
+    assert classify_notice_url(
+        "https://zakupki.gov.ru/epz/order/notice/zk20/view/common-info.html?regNumber=0362200006126000010"
+    ) == ("44-FZ", "zk20")
+    assert classify_notice_url(
+        "https://zakupki.gov.ru/epz/order/notice/ok20/view/common-info.html?regNumber=0249100000326000051"
+    ) == ("44-FZ", "ok20")
 
 
 def test_parse_search_results_mixed_notices() -> None:
@@ -77,15 +93,23 @@ def test_parse_223_documents() -> None:
 
 def test_parse_44_common_info_and_summary() -> None:
     html = load_fixture("common_44.html")
-    sections = parse_common_info(html, "44-FZ", "https://zakupki.gov.ru/epz/order/notice/ea44/view/common-info.html?regNumber=0334200038321000032")
+    sections = parse_common_info(
+        html,
+        "44-FZ",
+        "https://zakupki.gov.ru/epz/order/notice/zk20/view/common-info.html?regNumber=0362200006126000010",
+    )
     summary = extract_summary_fields(html, "44-FZ", sections)
 
     assert sections[0]["section"] == "Общая информация о закупке"
-    assert summary["registry_number"] == "0334200038321000032"
-    assert summary["price_text"] == "2 345 678,90 ₽"
-    assert summary["purchase_title"] == "Выполнение работ по текущему ремонту"
-    assert summary["customer_name"] == "ФОНД ИМУЩЕСТВА ИРКУТСКОЙ ОБЛАСТИ"
-    assert summary["submission_deadline"] == "29.03.2026 09:00"
+    assert summary["registry_number"] == "0362200006126000010"
+    assert summary["price_text"] == "14 323,82 ₽"
+    assert summary["purchase_title"] == "Оказание услуг по обязательному страхованию гражданской ответственности владельцев автотранспортных средств"
+    assert summary["customer_name"] == (
+        "ГОСУДАРСТВЕННОЕ БЮДЖЕТНОЕ ОБЩЕОБРАЗОВАТЕЛЬНОЕ УЧРЕЖДЕНИЕ СВЕРДЛОВСКОЙ ОБЛАСТИ "
+        '"ЕКАТЕРИНБУРГСКАЯ ШКОЛА-ИНТЕРНАТ № 10, РЕАЛИЗУЮЩАЯ АДАПТИРОВАННЫЕ ОСНОВНЫЕ '
+        'ОБЩЕОБРАЗОВАТЕЛЬНЫЕ ПРОГРАММЫ"'
+    )
+    assert summary["submission_deadline"] == "27.03.2026 08:00 (МСК+2)"
 
 
 def test_parse_44_documents() -> None:
@@ -93,13 +117,17 @@ def test_parse_44_documents() -> None:
     documents = parse_documents(
         html,
         "44-FZ",
-        "https://zakupki.gov.ru/epz/order/notice/ea44/view/documents.html?regNumber=0334200038321000032",
+        "https://zakupki.gov.ru/epz/order/notice/zk20/view/documents.html?regNumber=0362200006126000010",
     )
 
-    assert [document.source_filename for document in documents] == [
-        "фото Московская, 20.docx",
-        "АД Московская, 20.docx",
+    assert [document.display_name for document in documents] == [
+        "Обоснование начальной (максимальной) цены контракта",
+        "Проект государственного контракта",
     ]
-    assert documents[0].signature_url == "https://zakupki.gov.ru/epz/order/notice/signview/listModal.html?attachmentId=95990737"
-    assert documents[0].posted_at == "20.03.2026 12:00 (МСК)"
-    assert documents[0].version == "1"
+    assert [document.source_filename for document in documents] == [
+        "Обоснование НМЦК.doc",
+        "Проект контракта ОСАГО.doc",
+    ]
+    assert documents[0].signature_url == "https://zakupki.gov.ru/epz/order/notice/signview/listModal.html?attachmentId=210444525"
+    assert documents[0].posted_at == "20.03.2026 22:39 (МСК+2)"
+    assert documents[0].version == "Действующая"

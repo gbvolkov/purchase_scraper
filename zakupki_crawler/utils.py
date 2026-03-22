@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import re
@@ -10,7 +10,7 @@ from urllib.parse import parse_qs, urljoin, urlparse
 
 INVALID_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 WHITESPACE_RE = re.compile(r"\s+")
-NOTICE_44_RE = re.compile(r"/epz/order/notice/([^/]*44)/view/")
+NOTICE_VIEW_RE = re.compile(r"^/epz/order/notice/([^/]+)/view/")
 
 
 def clean_text(value: str | None) -> str:
@@ -54,12 +54,19 @@ def extract_digits(text: str) -> str:
 
 
 def classify_notice_url(url: str) -> tuple[str, str] | None:
-    if "/notice223/" in url:
+    parsed = urlparse(url)
+    query = parse_qs(parsed.query)
+
+    if "/notice223/" in parsed.path or "noticeInfoId" in query:
         return ("223-FZ", "notice223")
 
-    match = NOTICE_44_RE.search(url)
-    if match:
-        return ("44-FZ", match.group(1))
+    match = NOTICE_VIEW_RE.search(parsed.path)
+    if not match:
+        return None
+
+    family = match.group(1)
+    if "regNumber" in query:
+        return ("44-FZ", family)
 
     return None
 

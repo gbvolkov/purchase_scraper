@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import csv
 import os
@@ -23,7 +23,7 @@ LIVE_223_URL = (
 )
 LIVE_44_URL = (
     "https://zakupki.gov.ru/epz/order/extendedsearch/results.html?"
-    "searchString=0334200038321000032&morphology=on&search-filter=%D0%94%D0%B0%D1%82%D0%B5+"
+    "searchString=0362200006126000010&morphology=on&search-filter=%D0%94%D0%B0%D1%82%D0%B5+"
     "%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%89%D0%B5%D0%BD%D0%B8%D1%8F&sortBy=UPDATE_DATE&sortDirection=false&"
     "recordsPerPage=_10&showLotsInfoHidden=false&fz44=on"
 )
@@ -100,7 +100,7 @@ def test_live_44_end_to_end(tmp_path: Path) -> None:
 
     assert records
     first = records[0]
-    assert first.registry_number == "0334200038321000032"
+    assert first.registry_number == "0362200006126000010"
     assert first.crawl_status == "success"
     assert first.lots_json == "[]"
     assert first.downloaded_files

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from html import unescape
 from typing import Any
@@ -90,9 +90,10 @@ def extract_summary_fields(html: str, law: str, sections: list[dict[str, Any]]) 
         "updated_at": _find_labeled_value(soup, "Обновлено")
         or field_lookup.get("Дата размещения текущей редакции извещения"),
         "submission_deadline": (
-            _find_labeled_value(soup, "Окончание подачи заявок")
-            or field_lookup.get("Дата и время окончания срока подачи заявок (по местному времени заказчика)")
-            or field_lookup.get("Дата окончания срока подачи заявок")
+            field_lookup.get("\u0414\u0430\u0442\u0430 \u0438 \u0432\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0441\u0440\u043e\u043a\u0430 \u043f\u043e\u0434\u0430\u0447\u0438 \u0437\u0430\u044f\u0432\u043e\u043a")
+            or _find_labeled_value(soup, "\u041e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u0435 \u043f\u043e\u0434\u0430\u0447\u0438 \u0437\u0430\u044f\u0432\u043e\u043a")
+            or field_lookup.get("\u0414\u0430\u0442\u0430 \u0438 \u0432\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0441\u0440\u043e\u043a\u0430 \u043f\u043e\u0434\u0430\u0447\u0438 \u0437\u0430\u044f\u0432\u043e\u043a (\u043f\u043e \u043c\u0435\u0441\u0442\u043d\u043e\u043c\u0443 \u0432\u0440\u0435\u043c\u0435\u043d\u0438 \u0437\u0430\u043a\u0430\u0437\u0447\u0438\u043a\u0430)")
+            or field_lookup.get("\u0414\u0430\u0442\u0430 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0441\u0440\u043e\u043a\u0430 \u043f\u043e\u0434\u0430\u0447\u0438 \u0437\u0430\u044f\u0432\u043e\u043a")
         ),
     }
 
@@ -168,7 +169,7 @@ def parse_documents(html: str, law: str, base_url: str) -> list[DocumentRecord]:
         metadata = _extract_document_metadata(link)
         records.append(
             DocumentRecord(
-                display_name=_extract_document_name(link),
+                display_name=_extract_document_name(link, law),
                 source_filename=_extract_source_filename(link),
                 download_url=absolute_url,
                 raw_href=href,
@@ -299,8 +300,13 @@ def _is_download_href(url: str) -> bool:
     return "/purchase/public/download/download.html" in url or "/filestore/public/1.0/download/" in url
 
 
-def _extract_document_name(link: Tag) -> str:
-    for candidate in (link.get("title"), link.get("data-tooltip"), link.get_text(" ", strip=True)):
+def _extract_document_name(link: Tag, law: str) -> str:
+    candidates = (
+        (link.get_text(" ", strip=True), link.get("title"), link.get("data-tooltip"))
+        if law == "44-FZ"
+        else (link.get("title"), link.get("data-tooltip"), link.get_text(" ", strip=True))
+    )
+    for candidate in candidates:
         cleaned = _clean_document_label(candidate)
         if cleaned:
             return cleaned
