@@ -228,9 +228,9 @@ class ZakupkiCrawler:
             requested_name = sanitize_filename(document.source_filename or document.display_name)
             target_name = dedupe_filename(requested_name, used_names)
             target_path = purchase_dir / target_name
-            document.local_path = str(target_path)
 
             if target_path.exists():
+                document.local_path = str(target_path)
                 document.downloaded = False
                 continue
 
@@ -239,6 +239,7 @@ class ZakupkiCrawler:
                 self.pacer.click(page, locator, post_navigation=False)
             download = download_info.value
             self._save_download(download, target_path)
+            document.local_path = str(target_path)
             document.downloaded = True
 
     def _save_download(self, download: Download, target_path: Path) -> None:
@@ -360,5 +361,4 @@ class ZakupkiCrawler:
 
 def crawl(config: CrawlConfig) -> list[PurchaseRecord]:
     return ZakupkiCrawler(config).run()
-
 
