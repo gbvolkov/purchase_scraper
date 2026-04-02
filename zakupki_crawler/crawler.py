@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import csv
 import random
@@ -181,6 +181,7 @@ class ZakupkiCrawler:
             documents: list[DocumentRecord] = []
             try:
                 if self._navigate_notice_tab(detail_page, "Документы"):
+                    self._expand_document_attachments(detail_page)
                     record.documents_url = detail_page.url
                     documents = parse_documents(detail_page.content(), result.law, detail_page.url)
                     self._download_documents(detail_page, result.registry_number, documents)
@@ -241,6 +242,34 @@ class ZakupkiCrawler:
             self._save_download(download, target_path)
             document.local_path = str(target_path)
             document.downloaded = True
+
+    def _expand_document_attachments(self, page: Page) -> None:
+        for _ in range(25):
+            locator = self._find_visible_expand_more_locator(page)
+            if locator is None:
+                return
+
+            handle = locator.element_handle(timeout=5_000)
+            self.pacer.click(page, locator, post_navigation=False)
+            if handle is not None:
+                try:
+                    page.wait_for_function(
+                        "(element) => !element || !element.isConnected || "
+                        "element.innerText.trim() !== 'Показать больше'",
+                        arg=handle,
+                        timeout=5_000,
+                    )
+                except Error:
+                    pass
+            self.pacer.pause(extra_long_allowed=False, multiplier=0.35)
+
+    def _find_visible_expand_more_locator(self, page: Page) -> Locator | None:
+        expanders = page.get_by_text("Показать больше", exact=True)
+        for index in range(expanders.count()):
+            candidate = expanders.nth(index)
+            if candidate.is_visible():
+                return candidate
+        return None
 
     def _save_download(self, download: Download, target_path: Path) -> None:
         target_path.parent.mkdir(parents=True, exist_ok=True)

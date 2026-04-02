@@ -90,10 +90,10 @@ def extract_summary_fields(html: str, law: str, sections: list[dict[str, Any]]) 
         "updated_at": _find_labeled_value(soup, "Обновлено")
         or field_lookup.get("Дата размещения текущей редакции извещения"),
         "submission_deadline": (
-            field_lookup.get("\u0414\u0430\u0442\u0430 \u0438 \u0432\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0441\u0440\u043e\u043a\u0430 \u043f\u043e\u0434\u0430\u0447\u0438 \u0437\u0430\u044f\u0432\u043e\u043a")
-            or _find_labeled_value(soup, "\u041e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u0435 \u043f\u043e\u0434\u0430\u0447\u0438 \u0437\u0430\u044f\u0432\u043e\u043a")
-            or field_lookup.get("\u0414\u0430\u0442\u0430 \u0438 \u0432\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0441\u0440\u043e\u043a\u0430 \u043f\u043e\u0434\u0430\u0447\u0438 \u0437\u0430\u044f\u0432\u043e\u043a (\u043f\u043e \u043c\u0435\u0441\u0442\u043d\u043e\u043c\u0443 \u0432\u0440\u0435\u043c\u0435\u043d\u0438 \u0437\u0430\u043a\u0430\u0437\u0447\u0438\u043a\u0430)")
-            or field_lookup.get("\u0414\u0430\u0442\u0430 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0441\u0440\u043e\u043a\u0430 \u043f\u043e\u0434\u0430\u0447\u0438 \u0437\u0430\u044f\u0432\u043e\u043a")
+            field_lookup.get("Дата и время окончания срока подачи заявок")
+            or _find_labeled_value(soup, "Окончание подачи заявок")
+            or field_lookup.get("Дата и время окончания срока подачи заявок (по местному времени заказчика)")
+            or field_lookup.get("Дата окончания срока подачи заявок")
         ),
     }
 
